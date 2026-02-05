@@ -61,15 +61,16 @@
                 </div>
                 <button onclick="saveProduct()" id="pBtn" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg">সেভ প্রোডাক্ট</button>
             </div>
+            
             <div class="space-y-3">
                 <h3 class="font-bold text-pink-600 border-b pb-2 uppercase text-xs">📅 অনুষ্ঠান ম্যানেজ করুন</h3>
                 <input type="hidden" id="eId">
                 <input type="text" id="eT" placeholder="অনুষ্ঠানের নাম" class="w-full p-2 border rounded-lg text-black">
                 <input type="text" id="eTime" placeholder="তারিখ ও সময়" class="w-full p-2 border rounded-lg text-black">
                 <input type="text" id="eAddr" placeholder="ঠিকানা" class="w-full p-2 border rounded-lg text-black">
-                <input type="number" id="eWa" placeholder="হোয়াটসঅ্যাপ নম্বর" class="w-full p-2 border rounded-lg text-black">
+                <input type="number" id="eWa" placeholder="হোয়াটসঅ্যাপ নম্বর (যেমন: 9932642750)" class="w-full p-2 border rounded-lg text-black">
                 <input type="file" id="eF" class="text-black text-xs">
-                <button onclick="saveEvent()" id="eBtn" class="w-full bg-pink-600 text-white font-bold py-2 rounded-lg">সেভ অনুষ্ঠান</button>
+                <button onclick="saveEvent()" id="eBtn" class="w-full bg-pink-600 text-white font-bold py-2 rounded-lg">সেভ বিজ্ঞাপন</button>
             </div>
         </div>
     </div>
@@ -87,7 +88,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, updateDoc, onSnapshot, doc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAcbHZOUIT_KubZKYzCfpXCdyzObPM8slM",
@@ -100,7 +101,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        let isAdmin = false, allP = [];
+        let isAdmin = false, allP = [], allE = [];
 
         const compress = (file) => new Promise(res => {
             const r = new FileReader(); r.readAsDataURL(file);
@@ -121,61 +122,44 @@
                 document.getElementById('adminPanel').classList.remove('hidden');
                 document.getElementById('logoutBtn').classList.remove('hidden');
                 document.getElementById('loginBtn').classList.add('hidden');
-                window.renderP(allP);
+                renderP(allP);
+                renderE(allE);
             }
         };
 
-      window.saveProduct = async () => {
-    const id = document.getElementById('pId').value;
-    const btn = document.getElementById('pBtn');
-    
-    const name = document.getElementById('pName').value;
-    const oldPrice = document.getElementById('pOld').value;
-    const newPrice = document.getElementById('pNew').value;
+        window.saveProduct = async () => {
+            const id = document.getElementById('pId').value;
+            const btn = document.getElementById('pBtn');
+            btn.disabled = true; btn.innerText = "প্রসেস হচ্ছে...";
 
-    if(!name || !newPrice) {
-        alert("দয়া করে নাম এবং দাম লিখুন!");
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerText = "সেভ হচ্ছে...";
-
-    try {
-        const imgs = await Promise.all(['f1','f2','f3','f4'].map(async f => {
-            const file = document.getElementById(f).files[0];
-            return file ? await compress(file) : null;
-        }));
-        
-        const data = {
-            name: name,
-            old: oldPrice || 0,
-            new: newPrice,
-            desc: document.getElementById('pDesc').value || "",
-            date: Date.now()
+            const imgs = await Promise.all(['f1','f2','f3','f4'].map(async f => {
+                const file = document.getElementById(f).files[0];
+                return file ? await compress(file) : null;
+            }));
+            
+            const data = {
+                name: document.getElementById('pName').value,
+                old: document.getElementById('pOld').value || 0,
+                new: document.getElementById('pNew').value,
+                desc: document.getElementById('pDesc').value,
+                date: Date.now()
+            };
+            const vImgs = imgs.filter(i => i !== null);
+            if(vImgs.length > 0) data.images = vImgs;
+            
+            try {
+                if(id) await updateDoc(doc(db, "products", id), data);
+                else await addDoc(collection(db, "products"), data);
+                alert("সফলভাবে সেভ হয়েছে!");
+                location.reload();
+            } catch (e) { alert("Error: " + e.message); btn.disabled = false; }
         };
-        
-        const validImgs = imgs.filter(i => i !== null);
-        if(validImgs.length > 0) data.images = validImgs;
-        
-        if(id) {
-            await updateDoc(doc(db, "products", id), data);
-        } else {
-            await addDoc(collection(db, "products"), data);
-        }
-        
-        alert("প্রোডাক্ট সফলভাবে সেভ হয়েছে!");
-        location.reload();
-    } catch (e) {
-        console.error(e);
-        alert("ভুল হয়েছে: " + e.message);
-        btn.disabled = false;
-        btn.innerText = "সেভ প্রোডাক্ট";
-    }
-};
 
         window.saveEvent = async () => {
             const id = document.getElementById('eId').value;
+            const btn = document.getElementById('eBtn');
+            btn.disabled = true; btn.innerText = "সেভ হচ্ছে...";
+
             const data = {
                 t: document.getElementById('eT').value,
                 time: document.getElementById('eTime').value,
@@ -186,14 +170,15 @@
             const f = document.getElementById('eF').files[0];
             if(f) data.img = await compress(f);
             
-            if(id) await updateDoc(doc(db, "events", id), data);
-            else await addDoc(collection(db, "events"), data);
-            alert("অনুষ্ঠান আপডেট হয়েছে!");
-            location.reload();
+            try {
+                if(id) await updateDoc(doc(db, "events", id), data);
+                else await addDoc(collection(db, "events"), data);
+                alert("বিজ্ঞাপন সেভ হয়েছে!");
+                location.reload();
+            } catch (e) { alert("Error: " + e.message); btn.disabled = false; }
         };
 
-        window.renderP = (arr) => {
-            // Sort manually by date desc
+        const renderP = (arr) => {
             const sorted = [...arr].sort((a,b) => b.date - a.date);
             document.getElementById('p-list').innerHTML = sorted.map(p => `
                 <div class="glass p-4 shadow-xl flex flex-col h-full text-slate-800">
@@ -218,6 +203,25 @@
             `).join('');
         };
 
+        const renderE = (arr) => {
+            const sorted = [...arr].sort((a,b) => b.date - a.date);
+            document.getElementById('e-list').innerHTML = sorted.map(e => `
+                <div class="blink-card p-3 rounded-2xl bg-white/20 backdrop-blur-md">
+                    <img src="${e.img || 'https://via.placeholder.com/300?text=Event'}" class="w-full h-40 object-cover rounded-xl mb-3">
+                    <h4 class="font-bold text-white text-lg">${e.t}</h4>
+                    <p class="text-xs text-yellow-200 mt-1">⏰ ${e.time}</p>
+                    <p class="text-xs text-white/80">📍 ${e.addr}</p>
+                    <a href="https://wa.me/91${e.wa}?text=Hello, I am interested in ${e.t}" target="_blank" 
+                       class="block bg-green-500 text-center py-2 mt-3 rounded-lg text-sm font-bold text-white shadow-lg">বুকিং করতে ক্লিক করুন</a>
+                    ${isAdmin ? `
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="editE('${e.id}','${e.t.replace(/'/g, "\\'")}','${e.time}','${e.addr.replace(/'/g, "\\'")}','${e.wa}')" class="flex-1 bg-blue-500 text-white text-[10px] py-1 rounded">এডিট</button>
+                        <button onclick="del('events','${e.id}')" class="flex-1 bg-red-500 text-white text-[10px] py-1 rounded">ডিলিট</button>
+                    </div>` : ''}
+                </div>
+            `).join('');
+        };
+
         window.editP = (id,n,o,nw,d) => {
             document.getElementById('pId').value = id; 
             document.getElementById('pName').value = n;
@@ -227,34 +231,38 @@
             window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
-        window.del = async (c,i) => { 
-            if(confirm("আপনি কি নিশ্চিত এটি মুছতে চান?")) await deleteDoc(doc(db, c, i)); 
+        window.editE = (id,t,time,addr,wa) => {
+            document.getElementById('eId').value = id;
+            document.getElementById('eT').value = t;
+            document.getElementById('eTime').value = time;
+            document.getElementById('eAddr').value = addr;
+            document.getElementById('eWa').value = wa;
+            window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
-        // Real-time Update (Without server-side orderBy to avoid Index errors)
+        window.del = async (c,i) => { 
+            if(confirm("আপনি কি নিশ্চিত এটি মুছতে চান?")) {
+                try {
+                    await deleteDoc(doc(db, c, i));
+                    alert("মুছে ফেলা হয়েছে!");
+                } catch(e) { alert("Error: " + e.message); }
+            }
+        };
+
         onSnapshot(collection(db, "products"), s => {
             allP = s.docs.map(d => ({id: d.id, ...d.data()}));
-            window.renderP(allP);
+            renderP(allP);
         });
 
         onSnapshot(collection(db, "events"), s => {
-            const events = s.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => b.date - a.date);
-            document.getElementById('e-list').innerHTML = events.map(e => `
-                <div class="blink-card p-3 rounded-2xl bg-white/20 backdrop-blur-md">
-                    <img src="${e.img || 'https://via.placeholder.com/300?text=Event'}" class="w-full h-40 object-cover rounded-xl mb-3">
-                    <h4 class="font-bold text-white">${e.t}</h4>
-                    <p class="text-[10px] text-yellow-200">⏰ ${e.time}</p>
-                    <p class="text-[10px] text-white/80">📍 ${e.addr}</p>
-                    <a href="https://wa.me/${e.wa}" target="_blank" class="block bg-green-500 text-center py-2 mt-2 rounded-lg text-xs font-bold text-white">যোগাযোগ</a>
-                    ${isAdmin ? `<button onclick="del('events','${e.id}')" class="text-red-300 text-[10px] font-bold mt-2">ডিলিট</button>` : ''}
-                </div>
-            `).join('');
+            allE = s.docs.map(d => ({id: d.id, ...d.data()}));
+            renderE(allE);
         });
 
         document.getElementById('searchInput').addEventListener('input', e => {
             const term = e.target.value.toLowerCase();
             const filtered = allP.filter(p => p.name.toLowerCase().includes(term));
-            window.renderP(filtered);
+            renderP(filtered);
         });
     </script>
 
@@ -264,6 +272,29 @@
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
         };
     </script>
+    <script>
+    /* ১. রাইট ক্লিক ডিজেবল করা */
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    /* ২. কিবোর্ড শর্টকাট (F12, Ctrl+U, Ctrl+Shift+I) ব্লক করা */
+    document.onkeydown = function(e) {
+        if (e.keyCode == 123 || // F12
+            (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) || 
+            (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) { // Ctrl+U (View Source)
+            return false;
+        }
+    };
+
+    /* ৩. পাসওয়ার্ড ফিল্ড থেকে কপি-পেস্ট বন্ধ করা */
+    const passField = document.getElementById('loginPass');
+    if(passField) {
+        passField.oncopy = e => e.preventDefault();
+        passField.onpaste = e => e.preventDefault();
+        passField.oncut = e => e.preventDefault();
+    }
+
+    /* ৪. টেক্সট সিলেকশন বন্ধ করা (পুরো সাইটে) */
+    document.onselectstart = () => false; 
+</script>
 </body>
 </html>
-
