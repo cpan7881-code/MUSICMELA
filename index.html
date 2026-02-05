@@ -91,110 +91,160 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, updateDoc, onSnapshot, doc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, updateDoc, onSnapshot, doc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Firebase Config বসান
-        const firebaseConfig = {
-            apiKey: "AIzaSyAcbHZOUIT_KubZKYzCfpXCdyzObPM8slM",
-            authDomain: "musicmela-9564.firebaseapp.com",
-            projectId: "musicmela-9564",
-            storageBucket: "musicmela-9564.firebasestorage.app",
-            messagingSenderId: "663574771422",
-            appId: "1:663574771422:web:6a4827d65e1aab29b3b44f"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyAcbHZOUIT_KubZKYzCfpXCdyzObPM8slM",
+        authDomain: "musicmela-9564.firebaseapp.com",
+        projectId: "musicmela-9564",
+        storageBucket: "musicmela-9564.firebasestorage.app",
+        messagingSenderId: "663574771422",
+        appId: "1:663574771422:web:6a4827d65e1aab29b3b44f"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        let isAdmin = false, allP = [];
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let isAdmin = false, allP = [];
 
-        const compress = (file) => new Promise(res => {
-            const r = new FileReader(); r.readAsDataURL(file);
-            r.onload = e => {
-                const img = new Image(); img.src = e.target.result;
-                img.onload = () => {
-                    const c = document.createElement('canvas');
-                    c.width = 600; c.height = 600;
-                    c.getContext('2d').drawImage(img, 0, 0, 600, 600);
-                    res(c.toDataURL('image/jpeg', 0.6));
-                }
+    const compress = (file) => new Promise(res => {
+        const r = new FileReader(); r.readAsDataURL(file);
+        r.onload = e => {
+            const img = new Image(); img.src = e.target.result;
+            img.onload = () => {
+                const c = document.createElement('canvas');
+                c.width = 600; c.height = 600;
+                c.getContext('2d').drawImage(img, 0, 0, 600, 600);
+                res(c.toDataURL('image/jpeg', 0.6));
             }
-        });
+        }
+    });
 
-        window.adminLogin = () => {
-            if(prompt("পাসওয়ার্ড?") === "PALBABU") {
-                isAdmin = true;
-                document.getElementById('adminPanel').classList.remove('hidden');
-                document.getElementById('logoutBtn').classList.remove('hidden');
-                document.getElementById('loginBtn').classList.add('hidden');
-            }
+    window.adminLogin = () => {
+        if(prompt("পাসওয়ার্ড?") === "PALBABU") {
+            isAdmin = true;
+            document.getElementById('adminPanel').classList.remove('hidden');
+            document.getElementById('logoutBtn').classList.remove('hidden');
+            document.getElementById('loginBtn').classList.add('hidden');
+            renderP(allP); // রি-রেন্ডার যাতে এডিট বাটন দেখা যায়
+        }
+    };
+
+    window.saveProduct = async () => {
+        const id = document.getElementById('pId').value;
+        const imgs = await Promise.all(['f1','f2','f3','f4'].map(f => {
+            const file = document.getElementById(f).files[0];
+            return file ? compress(file) : null;
+        }));
+        const data = {
+            name: document.getElementById('pName').value,
+            old: document.getElementById('pOld').value,
+            new: document.getElementById('pNew').value,
+            desc: document.getElementById('pDesc').value,
+            date: Date.now()
         };
+        const vImgs = imgs.filter(i => i !== null);
+        if(vImgs.length > 0) data.images = vImgs;
+        
+        if(id) await updateDoc(doc(db, "products", id), data);
+        else await addDoc(collection(db, "products"), data);
+        location.reload();
+    };
 
-        window.saveProduct = async () => {
-            const id = document.getElementById('pId').value;
-            const imgs = await Promise.all(['f1','f2','f3','f4'].map(f => {
-                const file = document.getElementById(f).files[0];
-                return file ? compress(file) : null;
-            }));
-            const data = {
-                name: document.getElementById('pName').value,
-                old: document.getElementById('pOld').value,
-                new: document.getElementById('pNew').value,
-                desc: document.getElementById('pDesc').value,
-                date: Date.now()
-            };
-            const vImgs = imgs.filter(i => i !== null);
-            if(vImgs.length > 0) data.images = vImgs;
-            if(id) await updateDoc(doc(db, "products", id), data);
-            else await addDoc(collection(db, "products"), data);
-            location.reload();
+    window.saveEvent = async () => {
+        const id = document.getElementById('eId').value;
+        const data = {
+            t: document.getElementById('eT').value,
+            time: document.getElementById('eTime').value,
+            addr: document.getElementById('eAddr').value,
+            wa: document.getElementById('eWa').value,
+            date: Date.now()
         };
+        const f = document.getElementById('eF').files[0];
+        if(f) data.img = await compress(f);
+        if(id) await updateDoc(doc(db, "events", id), data);
+        else await addDoc(collection(db, "events"), data);
+        location.reload();
+    };
 
-        window.saveEvent = async () => {
-            const id = document.getElementById('eId').value;
-            const data = {
-                t: document.getElementById('eT').value,
-                time: document.getElementById('eTime').value,
-                addr: document.getElementById('eAddr').value,
-                wa: document.getElementById('eWa').value,
-                date: Date.now()
-            };
-            const f = document.getElementById('eF').files[0];
-            if(f) data.img = await compress(f);
-            if(id) await updateDoc(doc(db, "events", id), data);
-            else await addDoc(collection(db, "events"), data);
-            location.reload();
-        };
+    document.getElementById('searchInput').addEventListener('input', e => {
+        const term = e.target.value.toLowerCase();
+        const filtered = allP.filter(p => p.name.toLowerCase().includes(term));
+        renderP(filtered);
+    });
 
-        document.getElementById('searchInput').addEventListener('input', e => {
-            const term = e.target.value.toLowerCase();
-            const filtered = allP.filter(p => p.name.toLowerCase().includes(term));
-            renderP(filtered);
-        });
-
-        const renderP = (arr) => {
-            document.getElementById('p-list').innerHTML = arr.map(p => `
-                <div class="glass p-4 shadow-xl flex flex-col h-full">
-                    <div class="zoom-box mb-3"><img id="m-${p.id}" src="${p.images ? p.images[0] : ''}"></div>
-                    <div class="flex gap-1 mb-3 justify-center">
-                        ${p.images ? p.images.map(i => `<img src="${i}" onclick="document.getElementById('m-${p.id}').src='${i}'" class="w-8 h-8 border rounded-lg cursor-pointer">`).join('') : ''}
-                    </div>
-                    <h3 class="font-bold text-lg">${p.name}</h3>
-                    <div class="flex items-center gap-2 mb-2 font-bold">
-                        <span class="text-xs line-through text-gray-400">৳${p.old}</span>
-                        <span class="text-xl text-red-600">৳${p.new}</span>
-                    </div>
-                    <p class="text-[11px] text-gray-500 mb-4">${p.desc}</p>
-                    <div class="mt-auto">
-                        <a href="https://wa.me/919932642750" class="block bg-green-500 text-white text-center py-2 rounded-xl font-bold">অর্ডার করুন</a>
-                        ${isAdmin ? `<div class="flex gap-2 mt-2">
-                            <button onclick="editP('${p.id}','${p.name}','${p.old}','${p.new}','${p.desc}')" class="flex-1 bg-blue-100 text-blue-600 py-1 rounded text-xs font-bold">এডিট</button>
-                            <button onclick="del('products','${p.id}')" class="flex-1 bg-red-100 text-red-600 py-1 rounded text-xs font-bold">ডিলিট</button>
-                        </div>` : ''}
-                    </div>
+    // এখানে ভুল ছিল, ঠিক করা হয়েছে
+    window.renderP = (arr) => {
+        document.getElementById('p-list').innerHTML = arr.map(p => `
+            <div class="glass p-4 shadow-xl flex flex-col h-full">
+                <div class="zoom-box mb-3"><img id="m-${p.id}" src="${p.images ? p.images[0] : ''}"></div>
+                <div class="flex gap-1 mb-3 justify-center">
+                    ${p.images ? p.images.map(i => `<img src="${i}" onclick="document.getElementById('m-${p.id}').src='${i}'" class="w-8 h-8 border rounded-lg cursor-pointer">`).join('') : ''}
                 </div>
-            `).join('');
-        };
+                <h3 class="font-bold text-lg">${p.name}</h3>
+                <div class="flex items-center gap-2 mb-2 font-bold">
+                    <span class="text-xs line-through text-gray-400">৳${p.old}</span>
+                    <span class="text-xl text-red-600">৳${p.new}</span>
+                </div>
+                <p class="text-[11px] text-gray-500 mb-4">${p.desc}</p>
+                <div class="mt-auto">
+                    <a href="https://wa.me/919932642750" class="block bg-green-500 text-white text-center py-2 rounded-xl font-bold">অর্ডার করুন</a>
+                    ${isAdmin ? `<div class="flex gap-2 mt-2">
+                        <button onclick="editP('${p.id}','${p.name}','${p.old}','${p.new}','${p.desc}')" class="flex-1 bg-blue-100 text-blue-600 py-1 rounded text-xs font-bold">এডিট</button>
+                        <button onclick="del('products','${p.id}')" class="flex-1 bg-red-100 text-red-600 py-1 rounded text-xs font-bold">ডিলিট</button>
+                    </div>` : ''}
+                </div>
+            </div>
+        `).join('');
+    };
+
+    window.editP = (id,n,o,nw,d) => {
+        document.getElementById('pId').value = id; 
+        document.getElementById('pName').value = n;
+        document.getElementById('pOld').value = o; 
+        document.getElementById('pNew').value = nw;
+        document.getElementById('pDesc').value = d; 
+        window.scrollTo(0,0);
+    };
+
+    window.editE = (id,t,tm,ad,w) => {
+        document.getElementById('eId').value = id; 
+        document.getElementById('eT').value = t;
+        document.getElementById('eTime').value = tm; 
+        document.getElementById('eAddr').value = ad;
+        document.getElementById('eWa').value = w; 
+        window.scrollTo(0,0);
+    };
+
+    window.del = async (c,i) => { 
+        if(confirm("মুছবেন?")) await deleteDoc(doc(db, c, i)); 
+    };
+
+    // লাইভ ডাটা লিসেনার
+    onSnapshot(query(collection(db, "products"), orderBy("date", "desc")), s => {
+        allP = s.docs.map(d => ({id: d.id, ...d.data()}));
+        renderP(allP);
+    });
+
+    onSnapshot(query(collection(db, "events"), orderBy("date", "desc")), s => {
+        document.getElementById('e-list').innerHTML = s.docs.map(d => {
+            const e = d.data();
+            return `
+                <div class="blink-card p-3 rounded-2xl bg-white/20 backdrop-blur-md">
+                    <img src="${e.img}" class="w-full h-40 object-cover rounded-xl mb-3">
+                    <h4 class="font-bold text-white">${e.t}</h4>
+                    <p class="text-[10px] text-yellow-200">⏰ ${e.time}</p>
+                    <p class="text-[10px] text-white/80">📍 ${e.addr}</p>
+                    <a href="https://wa.me/${e.wa}" class="block bg-green-500 text-center py-2 mt-2 rounded-lg text-xs font-bold text-white">যোগাযোগ</a>
+                    ${isAdmin ? `<div class="flex gap-2 mt-2">
+                        <button onclick="editE('${d.id}','${e.t}','${e.time}','${e.addr}','${e.wa}')" class="text-blue-200 text-[10px] font-bold">এডিট</button>
+                        <button onclick="del('events','${d.id}')" class="text-red-300 text-[10px] font-bold">ডিলিট</button>
+                    </div>` : ''}
+                </div>
+            `;
+        }).join('');
+    });
+
 
         window.editP = (id,n,o,nw,d) => {
             document.getElementById('pId').value = id; document.getElementById('pName').value = n;
@@ -261,3 +311,4 @@
 </body>
 
 </html>
+
