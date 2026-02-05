@@ -125,33 +125,54 @@
             }
         };
 
-        window.saveProduct = async () => {
-            const id = document.getElementById('pId').value;
-            const btn = document.getElementById('pBtn');
-            btn.disabled = true; btn.innerText = "সেভ হচ্ছে...";
+      window.saveProduct = async () => {
+    const id = document.getElementById('pId').value;
+    const btn = document.getElementById('pBtn');
+    
+    const name = document.getElementById('pName').value;
+    const oldPrice = document.getElementById('pOld').value;
+    const newPrice = document.getElementById('pNew').value;
 
-            const imgs = await Promise.all(['f1','f2','f3','f4'].map(async f => {
-                const file = document.getElementById(f).files[0];
-                return file ? await compress(file) : null;
-            }));
-            
-            const data = {
-                name: document.getElementById('pName').value,
-                old: document.getElementById('pOld').value,
-                new: document.getElementById('pNew').value,
-                desc: document.getElementById('pDesc').value,
-                date: Date.now()
-            };
-            const vImgs = imgs.filter(i => i !== null);
-            if(vImgs.length > 0) data.images = vImgs;
-            
-            try {
-                if(id) await updateDoc(doc(db, "products", id), data);
-                else await addDoc(collection(db, "products"), data);
-                alert("প্রোডাক্ট সফলভাবে সেভ হয়েছে!");
-                location.reload();
-            } catch (e) { alert("Error: " + e.message); }
+    if(!name || !newPrice) {
+        alert("দয়া করে নাম এবং দাম লিখুন!");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "সেভ হচ্ছে...";
+
+    try {
+        const imgs = await Promise.all(['f1','f2','f3','f4'].map(async f => {
+            const file = document.getElementById(f).files[0];
+            return file ? await compress(file) : null;
+        }));
+        
+        const data = {
+            name: name,
+            old: oldPrice || 0,
+            new: newPrice,
+            desc: document.getElementById('pDesc').value || "",
+            date: Date.now()
         };
+        
+        const validImgs = imgs.filter(i => i !== null);
+        if(validImgs.length > 0) data.images = validImgs;
+        
+        if(id) {
+            await updateDoc(doc(db, "products", id), data);
+        } else {
+            await addDoc(collection(db, "products"), data);
+        }
+        
+        alert("প্রোডাক্ট সফলভাবে সেভ হয়েছে!");
+        location.reload();
+    } catch (e) {
+        console.error(e);
+        alert("ভুল হয়েছে: " + e.message);
+        btn.disabled = false;
+        btn.innerText = "সেভ প্রোডাক্ট";
+    }
+};
 
         window.saveEvent = async () => {
             const id = document.getElementById('eId').value;
@@ -245,3 +266,4 @@
     </script>
 </body>
 </html>
+
