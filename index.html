@@ -6,30 +6,23 @@
     <title>মিউজিক মেলা-সবার জন্য অলটাইম খোলা</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* রামধনু ব্যাকগ্রাউন্ড অ্যানিমেশন */
         body {
             background: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);
             background-size: 1800% 1800%;
             animation: rainbow 18s ease infinite;
             min-height: 100vh;
             color: #fff;
+            user-select: none; -webkit-user-select: none;
         }
         @keyframes rainbow { 
-            0%{background-position:0% 82%}
-            50%{background-position:100% 19%}
-            100%{background-position:0% 82%}
+            0%{background-position:0% 82%} 50%{background-position:100% 19%} 100%{background-position:0% 82%}
         }
-
         .glass { background: rgba(255, 255, 255, 0.95); color: #1e293b; border-radius: 20px; }
         .blink-card { border: 3px solid #ff0080; animation: blink 1.5s infinite; }
         @keyframes blink { 50% { border-color: #fff; box-shadow: 0 0 20px #ff0080; } }
-        
         .zoom-box { overflow: hidden; border-radius: 15px; background: #fff; aspect-ratio: 1/1; }
         .zoom-box img { transition: 0.5s ease; width: 100%; height: 100%; object-fit: contain; }
         .zoom-box:hover img { transform: scale(1.3); }
-        
-        /* টেক্সট সিলেকশন বন্ধ */
-        body { user-select: none; -webkit-user-select: none; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -46,7 +39,7 @@
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto mb-10">
+    <div class="max-w-7xl mx-auto mb-10 text-center">
         <input type="text" id="searchInput" placeholder="বাদ্যযন্ত্রের নাম লিখে সার্চ করুন..." 
         class="w-full md:w-1/2 p-4 rounded-2xl bg-white/20 border border-white/40 text-white placeholder-white/70 outline-none backdrop-blur-md">
     </div>
@@ -54,29 +47,29 @@
     <div id="adminPanel" class="hidden max-w-6xl mx-auto glass p-6 mb-12 border-4 border-white/50 shadow-2xl">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-3">
-                <h3 class="font-bold text-blue-600 border-b pb-2 uppercase text-xs">🛒 প্রোডাক্ট ম্যানেজ করুন</h3>
+                <h3 class="font-bold text-blue-600 border-b pb-2 uppercase text-xs">🛒 প্রোডাক্ট ম্যানেজ</h3>
                 <input type="hidden" id="pId">
-                <input type="text" id="pName" placeholder="প্রোডাক্টের নাম" class="w-full p-2 border rounded-lg">
+                <input type="text" id="pName" placeholder="প্রোডাক্টের নাম" class="w-full p-2 border rounded-lg text-black">
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="number" id="pOld" placeholder="পুরানো দাম (৳)" class="p-2 border rounded-lg">
-                    <input type="number" id="pNew" placeholder="অফার দাম (৳)" class="p-2 border rounded-lg">
+                    <input type="number" id="pOld" placeholder="পুরানো দাম" class="p-2 border rounded-lg text-black">
+                    <input type="number" id="pNew" placeholder="নতুন দাম" class="p-2 border rounded-lg text-black">
                 </div>
-                <textarea id="pDesc" placeholder="বিস্তারিত বর্ণনা..." class="w-full p-2 border rounded-lg h-16"></textarea>
-                <div class="grid grid-cols-2 gap-2 text-[10px]">
+                <textarea id="pDesc" placeholder="বর্ণনা..." class="w-full p-2 border rounded-lg h-16 text-black"></textarea>
+                <div class="grid grid-cols-2 gap-2 text-[10px] text-black">
                     <input type="file" id="f1"><input type="file" id="f2">
                     <input type="file" id="f3"><input type="file" id="f4">
                 </div>
                 <button onclick="saveProduct()" id="pBtn" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg">সেভ প্রোডাক্ট</button>
             </div>
             <div class="space-y-3">
-                <h3 class="font-bold text-pink-600 border-b pb-2 uppercase text-xs">📅 অনুষ্ঠান ম্যানেজ করুন</h3>
+                <h3 class="font-bold text-pink-600 border-b pb-2 uppercase text-xs">📅 অনুষ্ঠান ম্যানেজ</h3>
                 <input type="hidden" id="eId">
-                <input type="text" id="eT" placeholder="অনুষ্ঠানের নাম" class="w-full p-2 border rounded-lg">
-                <input type="text" id="eTime" placeholder="তারিখ ও সময়" class="w-full p-2 border rounded-lg">
-                <input type="text" id="eAddr" placeholder="ঠিকানা" class="w-full p-2 border rounded-lg">
-                <input type="number" id="eWa" placeholder="হোয়াটসঅ্যাপ নম্বর" class="w-full p-2 border rounded-lg">
-                <input type="file" id="eF">
-                <button onclick="saveEvent()" id="eBtn" class="w-full bg-pink-600 text-white font-bold py-2 rounded-lg">সেভ অনুষ্ঠান</button>
+                <input type="text" id="eT" placeholder="অনুষ্ঠানের নাম" class="w-full p-2 border rounded-lg text-black">
+                <input type="text" id="eTime" placeholder="তারিখ/সময়" class="w-full p-2 border rounded-lg text-black">
+                <input type="text" id="eAddr" placeholder="ঠিকানা" class="w-full p-2 border rounded-lg text-black">
+                <input type="number" id="eWa" placeholder="WhatsApp" class="w-full p-2 border rounded-lg text-black">
+                <input type="file" id="eF" class="text-black text-xs">
+                <button onclick="saveEvent()" id="eBtn" class="w-full bg-pink-600 text-white font-bold py-2 rounded-lg">সেভ ইভেন্ট</button>
             </div>
         </div>
     </div>
@@ -84,7 +77,7 @@
     <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div class="lg:col-span-3">
             <h2 class="text-2xl font-bold mb-6">🎸 আমাদের শপ</h2>
-            <div id="p-list" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 text-slate-800"></div>
+            <div id="p-list" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"></div>
         </div>
         <div class="lg:col-span-1">
             <h2 class="text-2xl font-bold mb-6">📅 বুকিং বিজ্ঞাপন</h2>
@@ -109,19 +102,21 @@
         const db = getFirestore(app);
         let isAdmin = false, allP = [];
 
+        // চিত্র ছোট করার ফাংশন
         const compress = (file) => new Promise(res => {
             const r = new FileReader(); r.readAsDataURL(file);
             r.onload = e => {
                 const img = new Image(); img.src = e.target.result;
                 img.onload = () => {
                     const c = document.createElement('canvas');
-                    c.width = 600; c.height = 600;
-                    c.getContext('2d').drawImage(img, 0, 0, 600, 600);
-                    res(c.toDataURL('image/jpeg', 0.6));
+                    c.width = 500; c.height = 500;
+                    c.getContext('2d').drawImage(img, 0, 0, 500, 500);
+                    res(c.toDataURL('image/jpeg', 0.7));
                 }
             }
         });
 
+        // Admin Login
         window.adminLogin = () => {
             if(prompt("পাসওয়ার্ড?") === "PALBABU") {
                 isAdmin = true;
@@ -132,12 +127,18 @@
             }
         };
 
+        // Product Save
         window.saveProduct = async () => {
             const id = document.getElementById('pId').value;
+            const btn = document.getElementById('pBtn');
+            btn.innerText = "অপেক্ষা করুন...";
+            btn.disabled = true;
+
             const imgs = await Promise.all(['f1','f2','f3','f4'].map(async f => {
                 const file = document.getElementById(f).files[0];
                 return file ? await compress(file) : null;
             }));
+            
             const data = {
                 name: document.getElementById('pName').value,
                 old: document.getElementById('pOld').value,
@@ -145,15 +146,18 @@
                 desc: document.getElementById('pDesc').value,
                 date: Date.now()
             };
-            const vImgs = imgs.filter(i => i !== null);
-            if(vImgs.length > 0) data.images = vImgs;
+            const validImgs = imgs.filter(i => i !== null);
+            if(validImgs.length > 0) data.images = validImgs;
             
-            if(id) await updateDoc(doc(db, "products", id), data);
-            else await addDoc(collection(db, "products"), data);
-            alert("প্রোডাক্ট আপডেট হয়েছে!");
-            location.reload();
+            try {
+                if(id) await updateDoc(doc(db, "products", id), data);
+                else await addDoc(collection(db, "products"), data);
+                alert("সফল হয়েছে!");
+                location.reload();
+            } catch(e) { alert("ভুল হয়েছে!"); }
         };
 
+        // Event Save
         window.saveEvent = async () => {
             const id = document.getElementById('eId').value;
             const data = {
@@ -165,18 +169,19 @@
             };
             const f = document.getElementById('eF').files[0];
             if(f) data.img = await compress(f);
+            
             if(id) await updateDoc(doc(db, "events", id), data);
             else await addDoc(collection(db, "events"), data);
-            alert("অনুষ্ঠান আপডেট হয়েছে!");
+            alert("ইভেন্ট সেভ হয়েছে!");
             location.reload();
         };
 
         window.renderP = (arr) => {
             document.getElementById('p-list').innerHTML = arr.map(p => `
-                <div class="glass p-4 shadow-xl flex flex-col h-full">
+                <div class="glass p-4 shadow-xl flex flex-col h-full text-slate-800">
                     <div class="zoom-box mb-3"><img id="m-${p.id}" src="${p.images ? p.images[0] : ''}"></div>
                     <div class="flex gap-1 mb-3 justify-center">
-                        ${p.images ? p.images.map(i => `<img src="${i}" onclick="document.getElementById('m-${p.id}').src='${i}'" class="w-8 h-8 border rounded-lg cursor-pointer">`).join('') : ''}
+                        ${p.images ? p.images.map(i => `<img src="${i}" onclick="document.getElementById('m-${p.id}').src='${i}'" class="w-8 h-8 border rounded cursor-pointer">`).join('') : ''}
                     </div>
                     <h3 class="font-bold text-lg">${p.name}</h3>
                     <div class="flex items-center gap-2 mb-2 font-bold">
@@ -204,20 +209,11 @@
             window.scrollTo(0,0);
         };
 
-        window.editE = (id,t,tm,ad,w) => {
-            document.getElementById('eId').value = id; 
-            document.getElementById('eT').value = t;
-            document.getElementById('eTime').value = tm; 
-            document.getElementById('eAddr').value = ad;
-            document.getElementById('eWa').value = w; 
-            window.scrollTo(0,0);
-        };
-
         window.del = async (c,i) => { 
-            if(confirm("মুছবেন?")) await deleteDoc(doc(db, c, i)); 
+            if(confirm("আপনি কি নিশ্চিত?")) await deleteDoc(doc(db, c, i)); 
         };
 
-        // লাইভ ডাটা লিসেনার
+        // Real-time Listeners
         onSnapshot(query(collection(db, "products"), orderBy("date", "desc")), s => {
             allP = s.docs.map(d => ({id: d.id, ...d.data()}));
             window.renderP(allP);
@@ -233,10 +229,7 @@
                         <p class="text-[10px] text-yellow-200">⏰ ${e.time}</p>
                         <p class="text-[10px] text-white/80">📍 ${e.addr}</p>
                         <a href="https://wa.me/${e.wa}" class="block bg-green-500 text-center py-2 mt-2 rounded-lg text-xs font-bold text-white">যোগাযোগ</a>
-                        ${isAdmin ? `<div class="flex gap-2 mt-2">
-                            <button onclick="editE('${d.id}','${e.t}','${e.time}','${e.addr}','${e.wa}')" class="text-blue-200 text-[10px] font-bold">এডিট</button>
-                            <button onclick="del('events','${d.id}')" class="text-red-300 text-[10px] font-bold">ডিলিট</button>
-                        </div>` : ''}
+                        ${isAdmin ? `<button onclick="del('events','${d.id}')" class="text-red-300 text-[10px] font-bold mt-2">ডিলিট</button>` : ''}
                     </div>
                 `;
             }).join('');
@@ -250,11 +243,8 @@
     </script>
 
     <script>
-        // সিকিউরিটি স্ক্রিপ্ট
+        // Right click protection
         document.addEventListener('contextmenu', e => e.preventDefault());
-        document.onkeydown = e => {
-            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
-        };
     </script>
 </body>
 </html>
